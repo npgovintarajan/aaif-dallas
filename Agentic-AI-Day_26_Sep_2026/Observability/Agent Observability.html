@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Observability | Enterprise Monitoring Framework</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --navy: #0f172a;
+            --slate-900: #1e293b;
+            --slate-800: #1e1e30;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            
+            --blue: #0ea5e9;
+            --blue-dark: #0284c7;
+            --teal: #14b8a6;
+            --emerald: #10b981;
+            --purple: #a855f7;
+            --amber: #f59e0b;
+            
+            --white: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-light: #94a3b8;
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--slate-50);
+            position: relative;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.02) 0%, rgba(14, 165, 233, 0.02) 100%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(248, 250, 252, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+            z-index: 100;
+            padding: 1.2rem 0;
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--blue);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--blue);
+        }
+
+        nav a:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+        .slide {
+            min-height: 100vh;
+            padding: 6rem 2rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.03) 0%, transparent 70%);
+            animation: subtle-drift 20s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        @keyframes subtle-drift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, -20px); }
+        }
+
+        .slide-content { max-width: 1000px; margin: 0 auto; width: 100%; position: relative; z-index: 1; }
+
+        /* Slide Variants */
+        .slide.hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a1f3a 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .slide.light {
+            background: var(--white);
+            border-top: 1px solid rgba(203, 213, 225, 0.3);
+        }
+
+        .slide.accent {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--teal) 100%);
+            color: white;
+        }
+
+        .slide.dark-alt {
+            background: linear-gradient(135deg, var(--slate-900) 0%, var(--slate-800) 100%);
+            color: white;
+        }
+
+        /* Typography */
+        .slide h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        .slide h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            margin-top: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .slide h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1.2rem;
+            letter-spacing: -0.3px;
+        }
+
+        .slide h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem;
+            letter-spacing: -0.2px;
+        }
+
+        .slide p {
+            font-size: 1.05rem;
+            line-height: 1.75;
+            margin-bottom: 1.2rem;
+            opacity: 0.95;
+            max-width: 75ch;
+        }
+
+        .slide.hero p { font-size: 1.2rem; opacity: 0.9; }
+        .slide.accent p, .slide.dark-alt p { color: rgba(255, 255, 255, 0.95); }
+
+        /* Lists */
+        ul {
+            margin: 1.5rem 0 1.5rem 2rem;
+            list-style: none;
+        }
+
+        li {
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+            line-height: 1.75;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--blue);
+            font-weight: 600;
+            width: 1.5rem;
+        }
+
+        .slide.accent li::before, .slide.dark-alt li::before {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--slate-50);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--teal));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(203, 213, 225, 0.8);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card h4 {
+            color: var(--navy);
+            margin-bottom: 0.8rem;
+        }
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .card ul {
+            margin: 1rem 0 0 0;
+        }
+
+        .card li {
+            font-size: 0.95rem;
+            padding-left: 1.5rem;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 2rem 0;
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--navy), var(--slate-900));
+            color: white;
+            padding: 1.2rem;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        td {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(203, 213, 225, 0.4);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background: var(--slate-50);
+        }
+
+        /* Key Point */
+        .key-point {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%);
+            border-left: 4px solid var(--blue);
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2.5rem 0;
+        }
+
+        .key-point h5 {
+            color: var(--blue);
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            font-size: 1.05rem;
+        }
+
+        /* Diagram */
+        .diagram {
+            background: linear-gradient(135deg, var(--slate-50) 0%, var(--slate-100) 100%);
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.8;
+            overflow-x: auto;
+            color: var(--navy);
+            white-space: pre;
+        }
+
+        /* Timeline */
+        .timeline {
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .timeline-item {
+            margin: 2rem 0;
+            padding-left: 2.5rem;
+            border-left: 2px solid rgba(14, 165, 233, 0.3);
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 3px;
+            width: 14px;
+            height: 14px;
+            background: var(--blue);
+            border: 2px solid var(--white);
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .timeline-item h4 {
+            color: var(--navy);
+            margin-bottom: 0.6rem;
+        }
+
+        .timeline-item p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--navy);
+            color: var(--slate-300);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        footer p {
+            color: var(--slate-300);
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        footer strong { color: var(--white); }
+
+        /* Divider */
+        .section-divider {
+            text-align: center;
+            padding: 1.5rem 0;
+            font-size: 1.2rem;
+            color: rgba(14, 165, 233, 0.4);
+            letter-spacing: 1px;
+        }
+
+        /* Highlight */
+        .highlight {
+            background: linear-gradient(120deg, transparent 0%, rgba(14, 165, 233, 0.25) 100%);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide { padding: 3rem 1rem; }
+            .slide h1 { font-size: 2.2rem; }
+            .slide h2 { font-size: 1.5rem; }
+            .slide p { font-size: 1rem; }
+            nav { flex-direction: column; gap: 1rem; }
+            nav ul { flex-direction: column; gap: 1rem; justify-content: center; }
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Print styles */
+        @media print {
+            header { position: relative; }
+            .slide { page-break-inside: avoid; min-height: auto; padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-title">📊 Agent Observability</div>
+            <ul>
+                <li><a href="#why">Overview</a></li>
+                <li><a href="#pillars">Framework</a></li>
+                <li><a href="#logging">Logging</a></li>
+                <li><a href="#tracing">Tracing</a></li>
+                <li><a href="#metrics">Metrics</a></li>
+                <li><a href="#tags">Instrumentation</a></li>
+                <li><a href="#specialized">Advanced</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- SLIDE 1: Hero -->
+    <section class="slide hero" id="title">
+        <div class="slide-content">
+            <h1>Agent Observability</h1>
+            <p style="font-size: 1.35rem; margin-bottom: 3rem; opacity: 0.85;">
+                Comprehensive Telemetry & Monitoring Framework for Production AI Systems
+            </p>
+            <div style="display: flex; gap: 2rem; justify-content: center; opacity: 0.8; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--blue); margin-bottom: 0.5rem;">Logs</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Event records</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--teal); margin-bottom: 0.5rem;">Traces</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Request causality</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 2rem; font-weight: 300; color: var(--emerald); margin-bottom: 0.5rem;">Metrics</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">Performance patterns</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 2: Strategic Importance -->
+    <section class="slide light" id="why">
+        <div class="slide-content">
+            <h2>Strategic Importance of Agent Monitoring</h2>
+            <p>Generative AI applications reshape operations. Without robust monitoring, even sophisticated systems stumble. Observability transforms operational data into strategic intelligence.</p>
+
+            <h3>Four Critical Drivers</h3>
+            <div class="grid">
+                <div class="card">
+                    <h4>Accuracy & Reliability</h4>
+                    <p>Models evolve and accuracy can drift. Continuous monitoring ensures outputs remain aligned with expectations and standards.</p>
+                </div>
+                <div class="card">
+                    <h4>Anomaly Detection</h4>
+                    <p>AI systems produce unexpected results from unforeseen scenarios. Monitoring enables rapid identification and mitigation of failures.</p>
+                </div>
+                <div class="card">
+                    <h4>User Experience Insights</h4>
+                    <p>Observing user interactions and behavior patterns reveals how well applications meet user needs, guiding continuous improvement.</p>
+                </div>
+                <div class="card">
+                    <h4>Cost Optimization</h4>
+                    <p>Running AI models at scale is resource-intensive. Monitoring visibility into consumption enables strategic optimization decisions.</p>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <h5>Core Principle</h5>
+                <p>You cannot optimize what you cannot measure. Agent systems require sophisticated observability—it is foundational infrastructure, not optional.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 3: Three Pillars -->
+    <section class="slide light" id="pillars">
+        <div class="slide-content">
+            <h2>Telemetry Framework: Three Pillars</h2>
+            <p>Telemetry is collecting and transmitting operational data for analysis. Agent systems require three complementary types for complete visibility.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h4>📝 Logs</h4>
+                    <p><strong>Event records</strong> of discrete actions and state changes.</p>
+                    <ul>
+                        <li>Individual operations</li>
+                        <li>Exception tracking</li>
+                        <li>Chronological sequence</li>
+                    </ul>
+                    <p style="color: var(--blue); font-weight: 600; margin-top: 1.2rem;">Answers: "What happened?"</p>
+                </div>
+                <div class="card">
+                    <h4>🔗 Traces</h4>
+                    <p><strong>Request journeys</strong> through system components.</p>
+                    <ul>
+                        <li>Complete execution paths</li>
+                        <li>Composed of spans</li>
+                        <li>Causality preserved</li>
+                    </ul>
+                    <p style="color: var(--teal); font-weight: 600; margin-top: 1.2rem;">Answers: "Why did it happen?"</p>
+                </div>
+                <div class="card">
+                    <h4>📊 Metrics</h4>
+                    <p><strong>Quantitative measures</strong> derived from historical analysis.</p>
+                    <ul>
+                        <li>Aggregated patterns</li>
+                        <li>Performance indicators</li>
+                        <li>Predictive signals</li>
+                    </ul>
+                    <p style="color: var(--emerald); font-weight: 600; margin-top: 1.2rem;">Answers: "What's the pattern?"</p>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <h5>Integration Principle</h5>
+                <p><strong>Logs alone</strong> miss causality. <strong>Traces alone</strong> miss patterns. <strong>Metrics alone</strong> lack context. Complete observability requires all three working together.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 4: Logging -->
+    <section class="slide light" id="logging">
+        <div class="slide-content">
+            <h2>Logging Strategy</h2>
+            <p>Logging provides critical insight into interactions, system behavior, and operational health of generative AI applications.</p>
+
+            <h3>Required Log Capture</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Content</th>
+                        <th>Business Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Request Metrics</strong></td>
+                        <td>Response times, termination codes, model parameters</td>
+                        <td>Demand and performance baseline</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Input Prompts</strong></td>
+                        <td>User queries, context, parameters</td>
+                        <td>Usage patterns and refinement</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Output</strong></td>
+                        <td>Generated responses, metadata</td>
+                        <td>Quality assurance and validation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Error Records</strong></td>
+                        <td>Exceptions, stack traces, context</td>
+                        <td>Root cause analysis and stability</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Implementation Guidelines</h3>
+            <div class="grid">
+                <div class="card">
+                    <h4>Data Management</h4>
+                    <p>Large payloads should be stored separately with reference IDs, not in log streams.</p>
+                </div>
+                <div class="card">
+                    <h4>Volume Control</h4>
+                    <p>Implement sampling strategies. Capture all errors; throttle informational logs.</p>
+                </div>
+                <div class="card">
+                    <h4>Security & Compliance</h4>
+                    <p>Anonymize sensitive data. Maintain regulatory compliance and user privacy standards.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 5: Tracing -->
+    <section class="slide light" id="tracing">
+        <div class="slide-content">
+            <h2>Tracing Architecture</h2>
+            <p>Tracing provides <span class="highlight">granular visibility</span> into request execution across system components. Each operation is a "span"; related spans form a complete trace.</p>
+
+            <h3>Span Categories</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Classification</th>
+                        <th>Responsibility</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>API Call</strong></td>
+                        <td>Request boundary; entry point instrumentation</td>
+                        <td>Full request</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Service Processing</strong></td>
+                        <td>Component-level operations; bottleneck identification</td>
+                        <td>ms to seconds</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Inference</strong></td>
+                        <td>AI execution; efficiency measurement</td>
+                        <td>1–5 seconds</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Fetching</strong></td>
+                        <td>Supplementary data retrieval</td>
+                        <td>10–500ms</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Critical Capabilities</h3>
+            <ul>
+                <li><strong>Causality Mapping:</strong> Which decisions led to subsequent actions</li>
+                <li><strong>Bottleneck Identification:</strong> Where execution time concentrates</li>
+                <li><strong>Cost Attribution:</strong> Assign resource consumption to components</li>
+                <li><strong>Error Context:</strong> Capture complete system state at failure</li>
+                <li><strong>Distributed Correlation:</strong> Track requests across multiple services</li>
+                <li><strong>Performance Validation:</strong> Measure impact of system changes</li>
+            </ul>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 6: Metrics -->
+    <section class="slide light" id="metrics">
+        <div class="slide-content">
+            <h2>Metrics Collection & Analysis</h2>
+            <p>Metrics are <span class="highlight">quantitative measures</span> providing insight into performance, health, and operational characteristics of your systems.</p>
+
+            <h3>System Performance Metrics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Definition</th>
+                        <th>Alert Threshold</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Request Rate</strong></td>
+                        <td>Requests per second; load indicator</td>
+                        <td>Unexpected spikes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Error Rate</strong></td>
+                        <td>Percentage of failed requests</td>
+                        <td>&gt; 1%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Latency Percentiles</strong></td>
+                        <td>P50, P95, P99 response times</td>
+                        <td>Exceeds SLA</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Agent-Specific Metrics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Significance</th>
+                        <th>Collection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Token Consumption</strong></td>
+                        <td>Direct cost driver</td>
+                        <td>Per invocation; aggregate daily</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cost Per Request</strong></td>
+                        <td>Operational expense tracking</td>
+                        <td>Sum costs; normalize by volume</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Component Cost %</strong></td>
+                        <td>Optimization priority</td>
+                        <td>AI cost ratio</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quality Metrics</strong></td>
+                        <td>Output quality assessment</td>
+                        <td>Model-specific measures</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 7: Instrumentation -->
+    <section class="slide light" id="tags">
+        <div class="slide-content">
+            <h2>Instrumentation: Context & Metadata</h2>
+            <p>Instrumentation tags provide <span class="highlight">contextual metadata</span> that enrich telemetry data, enabling deeper insights and precise filtering across systems.</p>
+
+            <h3>Five Essential Tag Categories</h3>
+
+            <div class="grid">
+                <div class="card">
+                    <h4>Correlation IDs</h4>
+                    <p>Unique identifiers correlating telemetry from single user interactions across components.</p>
+                    <ul>
+                        <li>Request-level tracking</li>
+                        <li>Session-level correlation</li>
+                        <li>Cross-service tracing</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Model Configuration</h4>
+                    <p>Capture model version and execution parameters for each invocation.</p>
+                    <ul>
+                        <li>Model identifier</li>
+                        <li>Token limits and parameters</li>
+                        <li>Temperature and penalty</li>
+                        <li>Prompt version tracking</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Operational Context</h4>
+                    <p>Infrastructure and deployment metadata for issue diagnosis.</p>
+                    <ul>
+                        <li>Application identity</li>
+                        <li>Server location and zone</li>
+                        <li>Deployment version</li>
+                        <li>Environment classification</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Interaction Attributes</h4>
+                    <p>User behavior classification while maintaining privacy standards.</p>
+                    <ul>
+                        <li>Interaction classification</li>
+                        <li>User segment categorization</li>
+                        <li>Session characteristics</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Agent & Component Tags</h4>
+                    <p>For multi-agent and complex orchestration scenarios.</p>
+                    <ul>
+                        <li>Agent identifier</li>
+                        <li>Tool/capability invoked</li>
+                        <li>Handoff relationships</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="key-point">
+                <h5>Compliance & Privacy</h5>
+                <p>All instrumentation must respect privacy regulations. Never tag sensitive personal information—use aggregated or anonymized categories.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 8: Advanced Observability -->
+    <section class="slide light" id="specialized">
+        <div class="slide-content">
+            <h2>Advanced Observability Scenarios</h2>
+
+            <h3>Embedding & Vector Search Monitoring</h3>
+            <p>Embedding operations in production require specific observability for ensuring accuracy and relevance in real-time retrieval systems.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h4>Similarity Metrics</h4>
+                    <p>Monitor distance measurements between queries and results. Validates relevance accuracy.</p>
+                    <ul>
+                        <li>Distance distribution</li>
+                        <li>Relevance consistency</li>
+                        <li>Diversity assessment</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Access Patterns</h4>
+                    <p>Track which embeddings are accessed most frequently. Reveals user preferences and content performance.</p>
+                    <ul>
+                        <li>Popularity trending</li>
+                        <li>Content resonance</li>
+                        <li>Algorithm effectiveness</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3>Conversational AI Monitoring</h3>
+            <p>Multi-turn conversations require specialized monitoring to capture engagement quality and user satisfaction.</p>
+
+            <div class="grid">
+                <div class="card">
+                    <h4>Engagement Metrics</h4>
+                    <ul>
+                        <li><strong>Session Duration:</strong> Extended interactions indicate satisfaction</li>
+                        <li><strong>Return Rate:</strong> Repeat sessions signal reliability</li>
+                        <li><strong>Message Volume:</strong> Conversation depth indicator</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Interaction Quality</h4>
+                    <ul>
+                        <li><strong>Abandonment Points:</strong> Where users disengage</li>
+                        <li><strong>Context Consistency:</strong> Topic coherence measurement</li>
+                        <li><strong>Completion Rates:</strong> Track successful resolutions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 9: Architecture -->
+    <section class="slide light">
+        <div class="slide-content">
+            <h2>Observability Stack Architecture</h2>
+            <p>Complete observability requires five integrated layers working in concert to transform raw operational data into strategic insights.</p>
+
+            <div class="diagram">
+┌─────────────────────────────────────────┐
+│  LAYER 1: INSTRUMENTATION              │
+│  Application instrumentation for data   │
+│  • Span wrapper implementation          │
+│  • Input/output capture and recording   │
+│  • Trace context generation             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  LAYER 2: COLLECTION                   │
+│  Telemetry aggregation and routing      │
+│  • Local storage (structured format)    │
+│  • Streaming transmission (real-time)   │
+│  • Batch collection (aggregation)       │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  LAYER 3: STORAGE & INDEXING           │
+│  Persistent storage with optimization   │
+│  • Trace backend (search and replay)    │
+│  • Log repository (full-text indexing)  │
+│  • Metrics database (time-series)       │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  LAYER 4: ANALYSIS & VISUALIZATION     │
+│  Insight generation and presentation    │
+│  • Trace visualization and navigation   │
+│  • Cost attribution and breakdown       │
+│  • Latency profiling and analysis       │
+│  • Trend detection and anomaly flagging │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  LAYER 5: OPERATIONAL ACTION           │
+│  Decision-making and optimization       │
+│  • Automated anomaly alerting           │
+│  • Optimization prioritization          │
+│  • Performance improvement measurement  │
+│  • Continuous tuning and refinement     │
+└─────────────────────────────────────────┘
+                        </div>
+
+            <h3>Implementation Patterns</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>Standard Telemetry Formats</h4>
+                    <p>Adopt vendor-neutral standards for telemetry collection. SDKs available across languages. Centralized collector manages data flow, processing, and routing.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Backend Integration</h4>
+                    <p>Centralized platform receives, processes, indexes, and stores telemetry. Enables correlation and fast historical retrieval.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Analytics & Presentation</h4>
+                    <p>Dashboards, query tools, and visualization provide real-time and historical insights. Automated alerting on configured thresholds.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Open-Source Ecosystem</h4>
+                    <p>Prometheus (metrics), Grafana (dashboards), Elasticsearch (logs), Jaeger (traces). Composable architecture for custom requirements.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 10: Analysis -->
+    <section class="slide light">
+        <div class="slide-content">
+            <h2>Data Analysis & Strategic Insights</h2>
+            <p>Effective monitoring captures data; <span class="highlight">extracting insights</span> drives operational improvements and strategic decision-making.</p>
+
+            <h3>Insight Extraction Framework</h3>
+
+            <div class="grid">
+                <div class="card">
+                    <h4>Multi-Source Analysis</h4>
+                    <p>Synthesize logs, traces, and metrics simultaneously. Identify patterns and root causes, not just symptoms.</p>
+                    <ul>
+                        <li>Cross-correlation of telemetry types</li>
+                        <li>Pattern recognition across data sources</li>
+                        <li>Root cause identification</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Operational Dashboards</h4>
+                    <p>Purpose-built dashboards answer specific operational questions with precision.</p>
+                    <ul>
+                        <li>Model execution consistency</li>
+                        <li>Component cost hierarchy</li>
+                        <li>Dependency performance</li>
+                        <li>Load impact assessment</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Automated Alerting</h4>
+                    <p>Proactive notification on meaningful thresholds and anomalies.</p>
+                    <ul>
+                        <li>Cost threshold breaches</li>
+                        <li>Error rate escalation</li>
+                        <li>SLA violations</li>
+                        <li>Component failures</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Metric Correlation</h4>
+                    <p>Combine disparate metrics for deeper understanding of system behavior.</p>
+                    <ul>
+                        <li>Load impact on costs</li>
+                        <li>Model changes on satisfaction</li>
+                        <li>Tool changes on cascade effects</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>Iterative Improvement</h4>
+                    <p>Use insights to guide continuous enhancement of system and model performance.</p>
+                    <ul>
+                        <li>Live data interaction patterns</li>
+                        <li>Edge case identification</li>
+                        <li>Problem prediction</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 11: Best Practices -->
+    <section class="slide light">
+        <div class="slide-content">
+            <h2>Operational Best Practices</h2>
+
+            <h3>Model Invocation Monitoring</h3>
+            <p><strong>Highest Priority:</strong> Model calls typically represent the largest cost component.</p>
+            <div class="card" style="margin-bottom: 2rem;">
+                <ul>
+                    <li><strong>Capture:</strong> Model identifier, input/output token counts, calculated cost</li>
+                    <li><strong>Track:</strong> Token consumption trends and cost per model</li>
+                    <li><strong>Monitor:</strong> Context creep (increasing token count over time)</li>
+                    <li><strong>Alert:</strong> When single call exceeds 50% of request cost</li>
+                    <li><strong>Optimize:</strong> Model selection, context pruning, caching strategies</li>
+                </ul>
+            </div>
+
+            <h3>External Tool Integration Monitoring</h3>
+            <div class="card" style="margin-bottom: 2rem;">
+                <ul>
+                    <li><strong>Capture:</strong> Tool identity, execution latency, success/failure status</li>
+                    <li><strong>Track:</strong> Individual tool performance trends</li>
+                    <li><strong>Monitor:</strong> Tools with consistently elevated latency</li>
+                    <li><strong>Alert:</strong> When tool latency exceeds 1 second threshold</li>
+                    <li><strong>Optimize:</strong> Connection pooling, result caching, parallel execution</li>
+                </ul>
+            </div>
+
+            <h3>Agent Loop Behavior Monitoring</h3>
+            <div class="card" style="margin-bottom: 2rem;">
+                <ul>
+                    <li><strong>Capture:</strong> Iteration count, decision points, tool invocations</li>
+                    <li><strong>Track:</strong> Average iterations per request type</li>
+                    <li><strong>Monitor:</strong> Unnecessary iterations and tool redundancy</li>
+                    <li><strong>Alert:</strong> When average iterations exceed 10 for standard requests</li>
+                    <li><strong>Optimize:</strong> Instruction refinement, context enrichment, early termination</li>
+                </ul>
+            </div>
+
+            <h3>Production Deployment Practices</h3>
+            <div class="card">
+                <ul>
+                    <li><strong>Export Strategy:</strong> Ship traces to centralized backend for comprehensive correlation</li>
+                    <li><strong>Baseline Establishment:</strong> Document P50/P95/P99 under normal operational load</li>
+                    <li><strong>Anomaly Detection:</strong> Configure alerts on cost spikes, latency increases, error escalations</li>
+                    <li><strong>Business Correlation:</strong> Link system anomalies to user impact and business metrics</li>
+                    <li><strong>Historical Retention:</strong> Maintain trace history for trend analysis and incident investigation</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 12: Implementation -->
+    <section class="slide light">
+        <div class="slide-content">
+            <h2>Implementation Approach</h2>
+            <p>Three progressive levels of instrumentation maturity, each balancing control with implementation effort.</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>Level 1: Explicit Instrumentation</h4>
+                    <p>Manual span wrapper implementation at operation boundaries. Provides maximum control and understanding. Requires code modifications but enables fine-grained visibility.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Level 2: Library Integration</h4>
+                    <p>Decorator and context manager injection of instrumentation. Minimal code changes required. Balances control with implementation efficiency.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Level 3: Runtime Instrumentation</h4>
+                    <p>Automatic instrumentation via APM solutions at runtime. Zero application code changes. Suitable for legacy systems and rapid deployment scenarios.</p>
+                </div>
+            </div>
+
+            <h3>Core Implementation Elements</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Phase</th>
+                        <th>Objective</th>
+                        <th>Timing</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Trace Initialization</strong></td>
+                        <td>Begin request tracking with unique identifier</td>
+                        <td>Request entry point</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Span Demarcation</strong></td>
+                        <td>Mark operation boundaries</td>
+                        <td>Wrap significant operations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Recording</strong></td>
+                        <td>Capture inputs, outputs, performance metrics</td>
+                        <td>Operation execution</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Exception Handling</strong></td>
+                        <td>Record exceptions with full context</td>
+                        <td>Exception occurrence</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trace Finalization</strong></td>
+                        <td>Complete trace recording and calculation</td>
+                        <td>Before response return</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Export</strong></td>
+                        <td>Transmit to storage/analysis backend</td>
+                        <td>Asynchronous post-capture</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 13: Deployment Roadmap -->
+    <section class="slide light">
+        <div class="slide-content">
+            <h2>Deployment Roadmap</h2>
+            <p>Phased approach to establishing comprehensive observability across your agent systems.</p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <h4>Phase 1: System Assessment</h4>
+                    <p>Identify architectural components, performance bottlenecks, and cost drivers. Map critical user journeys and failure modes.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Phase 2: Metrics Definition</h4>
+                    <p>Define business-aligned success metrics. Establish latency SLAs, cost budgets, and accuracy targets. Prioritize monitoring dimensions.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Phase 3: Instrumentation Design</h4>
+                    <p>Determine operation-level span strategy. Identify essential data capture points. Plan tag schema and context propagation.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Phase 4: Collection Implementation</h4>
+                    <p>Deploy local collection (files, structured logs). Establish transport mechanism to centralized backend. Standardize telemetry format.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Phase 5: Analysis Capability</h4>
+                    <p>Build operational dashboards. Configure alerting thresholds. Establish automated analysis workflows for pattern detection.</p>
+                </div>
+
+                <div class="timeline-item">
+                    <h4>Phase 6: Continuous Optimization</h4>
+                    <p>Use insights to drive optimization priorities. Measure improvement impact. Establish feedback loop. Refine metrics and thresholds iteratively.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 14: Core Principles -->
+    <section class="slide accent">
+        <div class="slide-content">
+            <h2>Core Principles</h2>
+
+            <div class="grid">
+                <div class="card" style="background: rgba(255, 255, 255, 0.12); border-left: 4px solid rgba(255, 255, 255, 0.5); color: white;">
+                    <h4 style="color: rgba(255, 255, 255, 0.95);">Observability vs. Monitoring</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85);">Monitoring validates operational status. Observability enables root cause analysis. Both required.</p>
+                </div>
+
+                <div class="card" style="background: rgba(255, 255, 255, 0.12); border-left: 4px solid rgba(255, 255, 255, 0.5); color: white;">
+                    <h4 style="color: rgba(255, 255, 255, 0.95);">Pillar Integration</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85);">Logs + Traces + Metrics deliver complete visibility. Omitting any component creates blind spots.</p>
+                </div>
+
+                <div class="card" style="background: rgba(255, 255, 255, 0.12); border-left: 4px solid rgba(255, 255, 255, 0.5); color: white;">
+                    <h4 style="color: rgba(255, 255, 255, 0.95);">Instrumentation Value</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85);">Correlation IDs, model tags, and operational metadata transform raw data into strategic intelligence.</p>
+                </div>
+
+                <div class="card" style="background: rgba(255, 255, 255, 0.12); border-left: 4px solid rgba(255, 255, 255, 0.5); color: white;">
+                    <h4 style="color: rgba(255, 255, 255, 0.95);">Domain-Specific Needs</h4>
+                    <p style="color: rgba(255, 255, 255, 0.85);">Embeddings, conversational AI, and agent loops require tailored observability approaches.</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 3rem; padding: 2.5rem; background: rgba(255, 255, 255, 0.1); border-radius: 12px; border-left: 4px solid rgba(255, 255, 255, 0.4);">
+                <h3 style="color: rgba(255, 255, 255, 0.95); margin-bottom: 1rem;">Observability as Strategic Infrastructure</h3>
+                <p style="font-size: 1.1rem; font-weight: 500; color: rgba(255, 255, 255, 0.9);">
+                    Instrumentation + Collection + Storage + Analysis + Action = Continuous Optimization
+                </p>
+                <p style="margin-top: 1rem; color: rgba(255, 255, 255, 0.85);">Missing any layer breaks the chain. Comprehensive observability is foundational infrastructure, not optional.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider">✦</div>
+
+    <!-- SLIDE 15: Closing -->
+    <section class="slide dark-alt">
+        <div class="slide-content" style="text-align: center;">
+            <h1>Agent Observability: Strategic Foundation</h1>
+
+            <div style="margin-top: 3rem; padding: 3rem; background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(20, 184, 166, 0.15) 100%); border-radius: 12px; border-left: 4px solid var(--blue);">
+                <h3 style="color: var(--blue); margin-bottom: 1rem;">Observability is non-negotiable infrastructure.</h3>
+                <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 1.5rem; line-height: 1.8;">
+                    Without comprehensive visibility into system behavior, performance characteristics, and user interactions, optimization becomes speculative. Telemetry transforms operational data into strategic intelligence that drives continuous improvement, cost efficiency, and user value.
+                </p>
+                <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.05rem;">
+                    <strong>Foundational Components:</strong> Logs (events) • Traces (causality) • Metrics (patterns)
+                </p>
+            </div>
+
+            <p style="margin-top: 4rem; font-size: 0.95rem; color: rgba(255, 255, 255, 0.6);">
+                Based on industry-proven monitoring practices for production agent systems
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <p><strong>📊 Agent Observability</strong></p>
+        <p>Comprehensive telemetry and monitoring framework for production AI systems</p>
+        <p style="font-size: 0.9rem; color: var(--slate-400); margin-top: 1.5rem;">
+            © 2025 | Based on industry best practices and proven production patterns
+        </p>
+    </footer>
+</body>
+</html>

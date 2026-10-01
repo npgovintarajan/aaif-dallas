@@ -1,0 +1,197 @@
+{
+  "id": "7ee29a44-a6f8-426f-a37d-ab031ca9ddf6",
+  "name": "Telecom Support (Baseline: gpt-4o planner+responder)",
+  "start_time": "2026-09-22T02:33:04.504261Z",
+  "end_time": "2026-09-22T02:33:11.477805Z",
+  "steps": [
+    {
+      "id": "ff59b55a-7f63-4308-bdc1-3aba16dc994f",
+      "name": "Plan ticket",
+      "type": "planner",
+      "agent_name": "planner_agent",
+      "agent_role": "planner",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": "openai",
+      "model": "gpt-4o",
+      "metrics": {
+        "prompt_tokens": 102,
+        "completion_tokens": 41,
+        "total_tokens": 143,
+        "latency": 2.8229316000069957,
+        "ttft": null,
+        "cost": 0.000665
+      },
+      "metadata": {
+        "plan": "```json\n{\n  \"issue_type\": \"duplicate charge\",\n  \"requires_refund\": true,\n  \"requires_escalation\": false,\n  \"next_agent\": \"billing_support\"\n}\n```"
+      }
+    },
+    {
+      "id": "179fbb83-9e1b-4b1e-bb03-94c8f3945d2a",
+      "name": "Retrieve billing policies",
+      "type": "retriever",
+      "agent_name": "researcher_agent",
+      "agent_role": "researcher",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": null,
+      "model": null,
+      "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "latency": 7.419998291879892e-05,
+        "ttft": null,
+        "cost": null
+      },
+      "metadata": {
+        "chunk_count": 4,
+        "retrieved_chunks": [
+          "Billing policy: A charge appearing twice on the same statement date for the same plan amount is treated as a duplicate billing error, not a legitimate second charge.",
+          "Account policy: Suspended accounts are not eligible for automatic refunds."
+        ]
+      }
+    },
+    {
+      "id": "e0e8e14e-a309-473e-b35b-c7dec570897b",
+      "name": "Research applicable policy",
+      "type": "llm_call",
+      "agent_name": "researcher_agent",
+      "agent_role": "researcher",
+      "parent_step_id": null,
+      "handoff_from": "planner_agent",
+      "handoff_to": "researcher_agent",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "metrics": {
+        "prompt_tokens": 136,
+        "completion_tokens": 53,
+        "total_tokens": 189,
+        "latency": 1.8125588000111748,
+        "ttft": null,
+        "cost": 5.2199999999999995e-05
+      },
+      "metadata": {
+        "summary": "The billing policy applies in this case, as it states that a charge appearing twice on the same statement date for the same plan amount is considered a duplicate billing error. Therefore, the action justified is to issue a refund for the duplicate charge of $87.50."
+      }
+    },
+    {
+      "id": "9bd3d980-5f1d-4022-b262-3d2c6fd8d4b3",
+      "name": "Fetch account",
+      "type": "tool_call",
+      "agent_name": "executor_agent",
+      "agent_role": "executor",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": null,
+      "model": null,
+      "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "latency": 0.05023700001765974,
+        "ttft": null,
+        "cost": null
+      },
+      "metadata": {
+        "tool_name": "fetch_account"
+      }
+    },
+    {
+      "id": "57010eab-53f6-4823-b425-f3de72413d30",
+      "name": "Fetch billing history",
+      "type": "tool_call",
+      "agent_name": "executor_agent",
+      "agent_role": "executor",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": null,
+      "model": null,
+      "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "latency": 0.310141099995235,
+        "ttft": null,
+        "cost": null
+      },
+      "metadata": {
+        "tool_name": "fetch_billing"
+      }
+    },
+    {
+      "id": "9202c782-98da-4b8d-8a76-172449104fb5",
+      "name": "Issue refund",
+      "type": "tool_call",
+      "agent_name": "executor_agent",
+      "agent_role": "executor",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": null,
+      "model": null,
+      "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "latency": 0.34052060000249185,
+        "ttft": null,
+        "cost": null
+      },
+      "metadata": {
+        "tool_name": "issue_refund"
+      }
+    },
+    {
+      "id": "071e2950-b08d-4b92-803c-0cc5a0b4e4fd",
+      "name": "Draft customer response",
+      "type": "final_response",
+      "agent_name": "responder_agent",
+      "agent_role": "responder",
+      "parent_step_id": null,
+      "handoff_from": "researcher_agent",
+      "handoff_to": "responder_agent",
+      "provider": "openai",
+      "model": "gpt-4o",
+      "metrics": {
+        "prompt_tokens": 163,
+        "completion_tokens": 69,
+        "total_tokens": 232,
+        "latency": 1.5357262000034098,
+        "ttft": null,
+        "cost": 0.0010975000000000002
+      },
+      "metadata": {
+        "final_answer": "Subject: Refund Confirmation for Duplicate Charge\n\nDear Customer,\n\nWe have resolved your billing issue and issued a refund for the duplicate charge. The refund ID is ref_xyz_001, and the amount is $87.50. We apologize for any inconvenience caused.\n\nThank you for your understanding.\n\nBest regards,\n\n[Your Name]  \n[Your Company]"
+      }
+    },
+    {
+      "id": "2a8be6ff-5a63-4ca6-b269-1bc5d6724e6e",
+      "name": "Send confirmation email",
+      "type": "tool_call",
+      "agent_name": "executor_agent",
+      "agent_role": "executor",
+      "parent_step_id": null,
+      "handoff_from": null,
+      "handoff_to": null,
+      "provider": null,
+      "model": null,
+      "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "total_tokens": 0,
+        "latency": 0.1005384000018239,
+        "ttft": null,
+        "cost": null
+      },
+      "metadata": {
+        "tool_name": "send_email"
+      }
+    }
+  ],
+  "chaos_events": []
+}
