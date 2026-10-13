@@ -145,7 +145,7 @@ This test proves goose can act on your machine, not just chat.
 
 ## Before the workshop: work safely
 
-- **goose runs commands on your computer.** That is the point, and it is also the risk. Work only in the empty workshop folder. Do not open company code or confidential files during the session.
+- **goose runs commands with your user privileges.** By default, the Developer extension uses Autonomous mode, and the empty workshop folder does not sandbox it from other accessible files. Before each session, switch to **Manual Approval** (`/mode approve` in the CLI or the mode selector in Desktop) and review every tool call. If the laptop contains sensitive files or credentials, use a separate OS account or disposable VM.
 - **Do not paste secrets, customer data, or employer information** into any prompt.
 - **During the workshop we will look at agent traces** (a step-by-step record of what an agent did). You will get an address to send yours to. By default, goose's trace export **does not include the content** of your prompts. We will talk about why that default matters.
 
